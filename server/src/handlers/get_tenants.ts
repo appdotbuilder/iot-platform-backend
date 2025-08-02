@@ -1,0 +1,9 @@
+
+import { type Tenant } from '../schema';
+
+export async function getTenants(): Promise<Tenant[]> {
+    // This is a placeholder declaration! Real code should be implemented here.
+    // The goal of this handler is fetching all tenants from the database.
+    // Should query tenantsTable and return all tenant records.
+    return [];
+}
