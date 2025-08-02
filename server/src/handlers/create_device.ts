@@ -1,18 +1,36 @@
 
+import { db } from '../db';
+import { devicesTable, tenantsTable } from '../db/schema';
 import { type CreateDeviceInput, type Device } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export async function createDevice(input: CreateDeviceInput): Promise<Device> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating a new device and persisting it in the database.
-    // Should validate the input, check that tenant_id exists, insert into devicesTable, and return the created device.
-    return Promise.resolve({
-        id: 1, // Placeholder ID
+  try {
+    // First, verify that the tenant exists
+    const tenant = await db.select()
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, input.tenant_id))
+      .execute();
+
+    if (tenant.length === 0) {
+      throw new Error(`Tenant with ID ${input.tenant_id} does not exist`);
+    }
+
+    // Insert device record
+    const result = await db.insert(devicesTable)
+      .values({
         name: input.name,
         device_type: input.device_type,
         serial_number: input.serial_number,
         status: input.status,
-        tenant_id: input.tenant_id,
-        created_at: new Date(),
-        updated_at: new Date()
-    } as Device);
+        tenant_id: input.tenant_id
+      })
+      .returning()
+      .execute();
+
+    return result[0];
+  } catch (error) {
+    console.error('Device creation failed:', error);
+    throw error;
+  }
 }

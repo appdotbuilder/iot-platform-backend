@@ -1,9 +1,24 @@
 
+import { db } from '../db';
+import { tenantsTable } from '../db/schema';
 import { type Tenant, type IdParam } from '../schema';
+import { eq } from 'drizzle-orm';
 
-export async function getTenantById(input: IdParam): Promise<Tenant | null> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching a specific tenant by ID from the database.
-    // Should query tenantsTable by ID and return the tenant or null if not found.
-    return null;
-}
+export const getTenantById = async (input: IdParam): Promise<Tenant | null> => {
+  try {
+    const result = await db.select()
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, input.id))
+      .execute();
+
+    if (result.length === 0) {
+      return null;
+    }
+
+    // Return the first (and only) result
+    return result[0];
+  } catch (error) {
+    console.error('Get tenant by ID failed:', error);
+    throw error;
+  }
+};

@@ -1,14 +1,41 @@
 
+import { db } from '../db';
+import { tenantsTable, devicesTable } from '../db/schema';
 import { type DashboardStats } from '../schema';
+import { eq, count } from 'drizzle-orm';
 
 export async function getDashboardStats(): Promise<DashboardStats> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is calculating and returning dashboard statistics.
-    // Should count total tenants, active tenants, total devices, and online devices from the database.
-    return Promise.resolve({
-        total_tenants: 0,
-        active_tenants: 0,
-        total_devices: 0,
-        online_devices: 0
-    } as DashboardStats);
+  try {
+    // Count total tenants
+    const totalTenantsResult = await db.select({ count: count() })
+      .from(tenantsTable)
+      .execute();
+
+    // Count active tenants
+    const activeTenantsResult = await db.select({ count: count() })
+      .from(tenantsTable)
+      .where(eq(tenantsTable.status, 'Active'))
+      .execute();
+
+    // Count total devices
+    const totalDevicesResult = await db.select({ count: count() })
+      .from(devicesTable)
+      .execute();
+
+    // Count online devices
+    const onlineDevicesResult = await db.select({ count: count() })
+      .from(devicesTable)
+      .where(eq(devicesTable.status, 'Online'))
+      .execute();
+
+    return {
+      total_tenants: totalTenantsResult[0].count,
+      active_tenants: activeTenantsResult[0].count,
+      total_devices: totalDevicesResult[0].count,
+      online_devices: onlineDevicesResult[0].count
+    };
+  } catch (error) {
+    console.error('Dashboard stats retrieval failed:', error);
+    throw error;
+  }
 }

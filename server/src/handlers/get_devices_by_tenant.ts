@@ -1,9 +1,19 @@
 
+import { db } from '../db';
+import { devicesTable } from '../db/schema';
 import { type Device, type IdParam } from '../schema';
+import { eq } from 'drizzle-orm';
 
-export async function getDevicesByTenant(input: IdParam): Promise<Device[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all devices belonging to a specific tenant.
-    // Should query devicesTable by tenant_id and return matching device records.
-    return [];
-}
+export const getDevicesByTenant = async (input: IdParam): Promise<Device[]> => {
+  try {
+    const results = await db.select()
+      .from(devicesTable)
+      .where(eq(devicesTable.tenant_id, input.id))
+      .execute();
+
+    return results;
+  } catch (error) {
+    console.error('Get devices by tenant failed:', error);
+    throw error;
+  }
+};

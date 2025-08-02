@@ -1,10 +1,25 @@
 
+import { db } from '../db';
+import { devicesTable } from '../db/schema';
 import { type IdParam } from '../schema';
+import { eq } from 'drizzle-orm';
 
-export async function deleteDevice(input: IdParam): Promise<{ success: boolean }> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is deleting a device from the database.
-    // Should delete the device by ID and return success status.
-    // Should throw an error if device is not found.
-    return Promise.resolve({ success: true });
-}
+export const deleteDevice = async (input: IdParam): Promise<{ success: boolean }> => {
+  try {
+    // Delete device by ID
+    const result = await db.delete(devicesTable)
+      .where(eq(devicesTable.id, input.id))
+      .returning()
+      .execute();
+
+    // Check if device was found and deleted
+    if (result.length === 0) {
+      throw new Error(`Device with ID ${input.id} not found`);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Device deletion failed:', error);
+    throw error;
+  }
+};

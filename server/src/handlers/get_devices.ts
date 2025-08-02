@@ -1,9 +1,17 @@
 
+import { db } from '../db';
+import { devicesTable } from '../db/schema';
 import { type Device } from '../schema';
 
-export async function getDevices(): Promise<Device[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all devices from the database.
-    // Should query devicesTable and return all device records.
-    return [];
-}
+export const getDevices = async (): Promise<Device[]> => {
+  try {
+    const results = await db.select()
+      .from(devicesTable)
+      .execute();
+
+    return results;
+  } catch (error) {
+    console.error('Get devices failed:', error);
+    throw error;
+  }
+};

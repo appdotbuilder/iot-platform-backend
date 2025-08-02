@@ -1,19 +1,46 @@
 
+import { db } from '../db';
+import { devicesTable, tenantsTable } from '../db/schema';
 import { type UpdateDeviceInput, type Device } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export async function updateDevice(input: UpdateDeviceInput): Promise<Device> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is updating an existing device in the database.
-    // Should validate the input, check that tenant_id exists if provided, update the device record, and return the updated device.
-    // Should throw an error if device is not found.
-    return Promise.resolve({
-        id: input.id,
-        name: 'Updated Device',
-        device_type: 'Updated Type',
-        serial_number: 'UPD123',
-        status: 'Online',
-        tenant_id: 1,
-        created_at: new Date(),
+  try {
+    // Check if device exists
+    const existingDevice = await db.select()
+      .from(devicesTable)
+      .where(eq(devicesTable.id, input.id))
+      .execute();
+
+    if (existingDevice.length === 0) {
+      throw new Error(`Device with id ${input.id} not found`);
+    }
+
+    // If tenant_id is being updated, validate it exists
+    if (input.tenant_id) {
+      const tenant = await db.select()
+        .from(tenantsTable)
+        .where(eq(tenantsTable.id, input.tenant_id))
+        .execute();
+
+      if (tenant.length === 0) {
+        throw new Error(`Tenant with id ${input.tenant_id} not found`);
+      }
+    }
+
+    // Update device record
+    const result = await db.update(devicesTable)
+      .set({
+        ...input,
         updated_at: new Date()
-    } as Device);
+      })
+      .where(eq(devicesTable.id, input.id))
+      .returning()
+      .execute();
+
+    return result[0];
+  } catch (error) {
+    console.error('Device update failed:', error);
+    throw error;
+  }
 }

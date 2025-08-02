@@ -1,11 +1,29 @@
 
+import { db } from '../db';
+import { tenantsTable } from '../db/schema';
 import { type IdParam } from '../schema';
+import { eq } from 'drizzle-orm';
 
-export async function deleteTenant(input: IdParam): Promise<{ success: boolean }> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is deleting a tenant from the database.
-    // Should delete the tenant by ID and return success status.
-    // Should handle cascade deletion of associated devices.
-    // Should throw an error if tenant is not found.
-    return Promise.resolve({ success: true });
-}
+export const deleteTenant = async (input: IdParam): Promise<{ success: boolean }> => {
+  try {
+    // Check if tenant exists before deletion
+    const existingTenant = await db.select()
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, input.id))
+      .execute();
+
+    if (existingTenant.length === 0) {
+      throw new Error(`Tenant with ID ${input.id} not found`);
+    }
+
+    // Delete the tenant (cascade will handle associated devices)
+    await db.delete(tenantsTable)
+      .where(eq(tenantsTable.id, input.id))
+      .execute();
+
+    return { success: true };
+  } catch (error) {
+    console.error('Tenant deletion failed:', error);
+    throw error;
+  }
+};
